@@ -9,16 +9,23 @@ import {
 } from "./store/bugs";
 import { projectAdded } from "./store/projects";
 import { userAdded } from "./store/users";
+import { loadBugs } from "./store/bugs";
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
 
 const store = configureStore();
 
-store.dispatch(
-  actions.apiCallBegan({
-    url: "/bugs",
-    onSuccess: actions.apiCallSuccess.type,
-    onError: actions.apicallFailed.type,
-  })
+store.dispatch(loadBugs());
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById("root")
 );
+// store.dispatch(loadBugs());
 
 // store.dispatch({
 //   type: "apiCallBegan",
@@ -45,13 +52,6 @@ store.dispatch(
 // import './index.css';
 // import App from './App';
 // import reportWebVitals from './reportWebVitals';
-
-// ReactDOM.render(
-//   <React.StrictMode>
-//     <App />
-//   </React.StrictMode>,
-//   document.getElementById('root')
-// );
 
 // // If you want to start measuring performance in your app, pass a function
 // // to log results (for example: reportWebVitals(console.log))

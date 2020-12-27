@@ -1,6 +1,9 @@
 import { createAction, createReducer, createSlice } from "@reduxjs/toolkit";
 import { createSelector } from "reselect";
+import { apiCallBegan } from "./api";
+import moment from "moment";
 const bugUpdated = createAction("Bug Updated");
+
 // console.log(bugUpdated().type);
 
 // Action Types without toolkit
@@ -29,34 +32,80 @@ const bugUpdated = createAction("Bug Updated");
 let lastId = 0;
 const slice = createSlice({
   name: "bugs",
-  initialState: [],
+  initialState: {
+    list: [],
+    loading: false,
+    lastFetch: null,
+  },
   reducers: {
+    bugsRequested: (state, action) => {
+      state.loading = true;
+    },
+    bugsRequestFailed: (state, action) => {
+      state.loading = false;
+    },
+    bugsRecieved: (state, action) => {
+      // console.log(action);
+      state.list = action.payload;
+      state.loading = false;
+      state.lastFetch = Date.now();
+    },
     bugAssignedToUser: (state, action) => {
       const { bugId, userId } = action.payload;
-      const index = state.findIndex((bug) => bug.id === bugId);
-      state[index].userId = userId;
+      const index = state.list.findIndex((bug) => bug.id === bugId);
+      state.list[index].userId = userId;
     },
     bugAdded: (state, action) => {
-      state.push({
+      state.list.push({
         id: ++lastId,
         description: action.payload.description,
         resolved: false,
       });
     },
     bugResolved: (state, action) => {
-      const index = state.findIndex((bug) => bug.id === action.payload.id);
-      state[index].resolved = true;
+      const index = state.list.findIndex((bug) => bug.id === action.payload.id);
+      state.list[index].resolved = true;
     },
   },
 });
-console.log(slice);
+// console.log(slice);
 export default slice.reducer;
-export const { bugAdded, bugResolved, bugAssignedToUser } = slice.actions;
+export const {
+  bugAdded,
+  bugsRecieved,
+  bugsRequestFailed,
+  bugsRequested,
+  bugResolved,
+  bugAssignedToUser,
+} = slice.actions;
 
 //without selector
 // export function unresolvedBugs(state) {
 //   return state.entities.bugs.filter((bug) => !bug.resolved);
 // }
+let url = "/bugs";
+export const loadBugs = () => (dispatch, getState) => {
+  // const { lastFetch } = getState().entities.bugs;
+  // const diffInMinutes = moment().diff(moment(lastFetch), "minutes");
+  // if (diffInMinutes < 10) return;
+
+  dispatch(
+    apiCallBegan({
+      url,
+      onStart: bugsRequested.type,
+      onSuccess: bugsRecieved.type,
+      onError: bugsRequestFailed.type,
+    })
+  );
+};
+// export const loadBugs = () =>
+//   apiCallBegan({
+//     url,
+//     onStart: bugsRequested.type,
+//     onSuccess: bugsRecieved.type,
+//     onError: bugsRequestFailed.type,
+//   });
+
 export const unresolvedBugs = createSelector(
   (state) => state.entities.bugs,
   (bugs) => bugs.filter((bug) => !bug.resolved)

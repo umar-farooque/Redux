@@ -18,5 +18,5 @@ app.get("/api/bugs", (req, res) => {
   res.status(200).send(bugs);
 });
 
-const port = 5000;
+const port = 5001;
 app.listen(port, () => console.log(`app is listening on port: ${port}`));
